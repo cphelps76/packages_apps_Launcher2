@@ -63,6 +63,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.StrictMode;
 import android.os.SystemClock;
+import android.os.SystemProperties;
 import android.os.UserManager;
 import android.provider.Settings;
 import android.speech.RecognizerIntent;
@@ -818,6 +819,14 @@ public final class Launcher extends Activity
         // Again, as with the above scenario, it's possible that one or more of the global icons
         // were updated in the wrong orientation.
         updateGlobalIcons();
+        if(SystemProperties.getBoolean("ro.platform.has.mbxuimode", false)){
+            if(SystemProperties.getBoolean("ubootenv.var.has.accelerometer", true)
+            && SystemProperties.getBoolean("sys.keeplauncher.landcape", false))
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+            else
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+            }
+            
         if (DEBUG_RESUME_TIME) {
             Log.d(TAG, "Time spent in onResume: " + (System.currentTimeMillis() - startTime));
         }
@@ -3840,12 +3849,26 @@ public final class Launcher extends Activity
                 ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT,
                 ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
         };
+
         // Since the map starts at portrait, we need to offset if this device's natural orientation
         // is landscape.
         int indexOffset = 0;
         if (naturalOri == Configuration.ORIENTATION_LANDSCAPE) {
             indexOffset = 1;
         }
+
+		//tellen added 20120904 for reverse default rotation change
+		if (Launcher.this.getResources().getBoolean(
+                    com.android.internal.R.bool.config_reverseDefaultRotation)){
+			int[] oriMap2 = {
+                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT,
+                ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE,
+                ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT,
+                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        	};
+			return oriMap2[(d.getRotation() + indexOffset) % 4];
+		}
+		
         return oriMap[(d.getRotation() + indexOffset) % 4];
     }
 
@@ -3977,47 +4000,64 @@ public final class Launcher extends Activity
 
     public void showFirstRunWorkspaceCling() {
         // Enable the clings only if they have not been dismissed before
-        if (isClingsEnabled() &&
-                !mSharedPrefs.getBoolean(Cling.WORKSPACE_CLING_DISMISSED_KEY, false) &&
-                !skipCustomClingIfNoAccounts() ) {
-            // If we're not using the default workspace layout, replace workspace cling
-            // with a custom workspace cling (usually specified in an overlay)
-            // For now, only do this on tablets
-            if (mSharedPrefs.getInt(LauncherProvider.DEFAULT_WORKSPACE_RESOURCE_ID, 0) != 0 &&
-                    getResources().getBoolean(R.bool.config_useCustomClings)) {
-                // Use a custom cling
-                View cling = findViewById(R.id.workspace_cling);
-                ViewGroup clingParent = (ViewGroup) cling.getParent();
-                int clingIndex = clingParent.indexOfChild(cling);
-                clingParent.removeViewAt(clingIndex);
-                View customCling = mInflater.inflate(R.layout.custom_workspace_cling, clingParent, false);
-                clingParent.addView(customCling, clingIndex);
-                customCling.setId(R.id.workspace_cling);
-            }
-            initCling(R.id.workspace_cling, null, false, 0);
-        } else {
+        if(SystemProperties.getBoolean("ro.platform.has.mbxuimode", false)){
             removeCling(R.id.workspace_cling);
+        }
+        else{
+            if (isClingsEnabled() &&
+                    !mSharedPrefs.getBoolean(Cling.WORKSPACE_CLING_DISMISSED_KEY, false) &&
+                    !skipCustomClingIfNoAccounts() ) {
+                // If we're not using the default workspace layout, replace workspace cling
+                // with a custom workspace cling (usually specified in an overlay)
+                // For now, only do this on tablets
+                if (mSharedPrefs.getInt(LauncherProvider.DEFAULT_WORKSPACE_RESOURCE_ID, 0) != 0 &&
+                        getResources().getBoolean(R.bool.config_useCustomClings)) {
+                    // Use a custom cling
+                    View cling = findViewById(R.id.workspace_cling);
+                    ViewGroup clingParent = (ViewGroup) cling.getParent();
+                    int clingIndex = clingParent.indexOfChild(cling);
+                    clingParent.removeViewAt(clingIndex);
+                    View customCling = mInflater.inflate(R.layout.custom_workspace_cling, clingParent, false);
+                    clingParent.addView(customCling, clingIndex);
+                    customCling.setId(R.id.workspace_cling);
+                }
+                initCling(R.id.workspace_cling, null, false, 0);
+            } else {
+                removeCling(R.id.workspace_cling);
+            }
         }
     }
     public void showFirstRunAllAppsCling(int[] position) {
         // Enable the clings only if they have not been dismissed before
-        if (isClingsEnabled() &&
-                !mSharedPrefs.getBoolean(Cling.ALLAPPS_CLING_DISMISSED_KEY, false)) {
-            initCling(R.id.all_apps_cling, position, true, 0);
-        } else {
+        if(SystemProperties.getBoolean("ro.platform.has.mbxuimode", false)){
             removeCling(R.id.all_apps_cling);
+        }
+        else{
+            if (isClingsEnabled() &&
+                    !mSharedPrefs.getBoolean(Cling.ALLAPPS_CLING_DISMISSED_KEY, false)) {
+                initCling(R.id.all_apps_cling, position, true, 0);
+            } else {
+                removeCling(R.id.all_apps_cling);
+            }
         }
     }
     public Cling showFirstRunFoldersCling() {
         // Enable the clings only if they have not been dismissed before
-        if (isClingsEnabled() &&
-                !mSharedPrefs.getBoolean(Cling.FOLDER_CLING_DISMISSED_KEY, false)) {
-            return initCling(R.id.folder_cling, null, true, 0);
-        } else {
+        if(SystemProperties.getBoolean("ro.platform.has.mbxuimode", false)){
             removeCling(R.id.folder_cling);
             return null;
         }
+        else{
+            if (isClingsEnabled() &&
+                    !mSharedPrefs.getBoolean(Cling.FOLDER_CLING_DISMISSED_KEY, false)) {
+                return initCling(R.id.folder_cling, null, true, 0);
+            } else {
+                removeCling(R.id.folder_cling);
+                return null;
+            }
+        }
     }
+
     public boolean isFolderClingVisible() {
         Cling cling = (Cling) findViewById(R.id.folder_cling);
         if (cling != null) {

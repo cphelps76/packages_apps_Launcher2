@@ -58,4 +58,61 @@
         launcher:y="3" />
 
     <!-- Far-right screen [4] -->
+    <!-- Hotseat (We use the screen as the position of the item in the hotseat) -->
+	<favorite
+	    launcher:packageName="com.android.settings"
+	    launcher:className="com.android.settings.Settings"
+	    launcher:container="-101"
+	    launcher:screen="0"
+	    launcher:x="0"
+	    launcher:y="0" />
+	<favorite
+	    launcher:packageName="com.amlogic.HdmiSwitch"
+	    launcher:className="com.amlogic.HdmiSwitch.HdmiSwitch"
+	    launcher:container="-101"
+	    launcher:screen="1"
+	    launcher:x="1"
+	    launcher:y="0"/>
+	<favorite
+	    launcher:packageName="com.android.browser"
+	    launcher:className="com.android.browser.BrowserActivity"
+	    launcher:container="-101"
+	    launcher:screen="2"
+	    launcher:x="2"
+	    launcher:y="0" />
+	<favorite
+	    launcher:packageName="com.fb.FileBrower"
+	    launcher:className="com.fb.FileBrower.FileBrower"
+		launcher:container="-101"
+	    launcher:screen="3"
+	    launcher:x="3"
+	    launcher:y="0" />
+	<favorite
+	    launcher:packageName="com.android.gallery3d"
+	    launcher:className="com.android.gallery3d.app.Gallery"
+		launcher:container="-101"
+	    launcher:screen="5"
+	    launcher:x="5"
+	    launcher:y="0" />
+	<favorite
+	    launcher:packageName="com.android.calendar"
+	    launcher:className="com.android.calendar.AllInOneActivity"
+		launcher:container="-101"
+	    launcher:screen="6"
+	    launcher:x="6"
+	    launcher:y="0" />
+	<favorite
+	    launcher:packageName="com.farcore.videoplayer"
+	    launcher:className="com.farcore.videoplayer.FileList"
+		launcher:container="-101"
+	    launcher:screen="7"
+	    launcher:x="7"
+	    launcher:y="0" />
+	<favorite
+	    launcher:packageName="com.gsoft.appinstall"
+	    launcher:className="com.gsoft.appinstall.main"
+		launcher:container="-101"
+	    launcher:screen="8"
+	    launcher:x="8"
+	    launcher:y="0" />
 </favorites>

@@ -36,6 +36,8 @@ import android.view.inputmethod.InputMethodManager;
 import com.android.launcher.R;
 
 import java.util.ArrayList;
+import android.os.SystemProperties;
+import android.view.Display;
 
 /**
  * Class for initiating a drag within a view or across multiple views.
@@ -395,6 +397,16 @@ public class DragController {
      */
     private int[] getClampedDragLayerPos(float x, float y) {
         mLauncher.getDragLayer().getLocalVisibleRect(mDragLayerRect);
+
+        /*when hide statusbar,
+                 mDragLayerRect.bottom is not equal to mLauncher.getWindowManager().getDefaultDisplay().y
+                 any more*/
+        if(SystemProperties.getBoolean("persist.sys.hideStatusBar", false)){
+            Display display = mLauncher.getWindowManager().getDefaultDisplay();
+            Point mDisplaySize = new Point();
+            display.getSize(mDisplaySize);
+            mDragLayerRect.set(0,0,mDisplaySize.x,mDisplaySize.y);
+        }
         mTmpPoint[0] = (int) Math.max(mDragLayerRect.left, Math.min(x, mDragLayerRect.right - 1));
         mTmpPoint[1] = (int) Math.max(mDragLayerRect.top, Math.min(y, mDragLayerRect.bottom - 1));
         return mTmpPoint;

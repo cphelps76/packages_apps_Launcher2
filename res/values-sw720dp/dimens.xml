@@ -44,7 +44,7 @@
 
 <!-- AppsCustomize -->
     <dimen name="apps_customize_cell_width">96dp</dimen>
-    <dimen name="apps_customize_cell_height">96dp</dimen>
+    <dimen name="apps_customize_cell_height">98dp</dimen>
     <integer name="apps_customize_maxCellCountX">-1</integer>
     <integer name="apps_customize_maxCellCountY">-1</integer>
     <dimen name="all_apps_button_vertical_padding">4dip</dimen>
@@ -100,7 +100,7 @@
     <dimen name="workspace_cell_width_port">96dp</dimen>
     <dimen name="workspace_cell_height_land">96dp</dimen>
     <dimen name="workspace_cell_height_port">96dp</dimen>
-    <dimen name="workspace_width_gap_land">50dp</dimen>
+    <dimen name="workspace_width_gap_land">32dp</dimen>
     <dimen name="workspace_width_gap_port">0dp</dimen>
     <dimen name="workspace_height_gap_land">16dp</dimen>
     <dimen name="workspace_height_gap_port">70dp</dimen>

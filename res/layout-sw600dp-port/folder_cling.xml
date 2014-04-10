@@ -16,7 +16,7 @@
 <com.android.launcher2.Cling
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:launcher="http://schemas.android.com/apk/res/com.android.launcher"
-    launcher:drawIdentifier="folder_portrait">
+    launcher:drawIdentifier="folder_large">
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -34,9 +34,14 @@
             <TextView
                 style="@style/ClingText"
                 android:id="@+id/folder_cling_create_folder"
-                android:layout_width="match_parent"
+                android:layout_width="480dp"
                 android:layout_height="wrap_content"
                 android:text="@string/folder_cling_create_folder" />
+            <Button
+                style="@style/ClingButton"
+                android:id="@+id/cling_dismiss"
+                android:layout_marginTop="15dp"
+                android:onClick="dismissFolderCling" />
         </LinearLayout>
     </FrameLayout>
     <Button

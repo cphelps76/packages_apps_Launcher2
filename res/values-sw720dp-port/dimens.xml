@@ -50,7 +50,7 @@
 <!-- Hotseat -->
     <dimen name="hotseat_width_gap">14dp</dimen>
     <dimen name="button_bar_height">126dp</dimen>
-    <dimen name="button_bar_height_plus_padding">126dp</dimen>
+    <dimen name="button_bar_height_plus_padding">82dp</dimen>
     <dimen name="button_bar_height_bottom_padding">32dp</dimen>
 
 <!-- Cling -->
