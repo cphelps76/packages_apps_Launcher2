@@ -81,6 +81,7 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
 import android.view.View.OnLongClickListener;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
@@ -92,12 +93,14 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Advanceable;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.common.Search;
 import com.android.launcher.R;
 import com.android.launcher2.DropTarget.DragObject;
+import com.android.launcher2.preference.Preferences;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -130,7 +133,8 @@ public final class Launcher extends Activity
     private static final int MENU_GROUP_WALLPAPER = 1;
     private static final int MENU_WALLPAPER_SETTINGS = Menu.FIRST + 1;
     private static final int MENU_MANAGE_APPS = MENU_WALLPAPER_SETTINGS + 1;
-    private static final int MENU_SYSTEM_SETTINGS = MENU_MANAGE_APPS + 1;
+    private static final int MENU_PREFERENCES = MENU_MANAGE_APPS + 1;
+    private static final int MENU_SYSTEM_SETTINGS = MENU_PREFERENCES + 1;
     private static final int MENU_HELP = MENU_SYSTEM_SETTINGS + 1;
 
     private static final int REQUEST_CREATE_SHORTCUT = 1;
@@ -1629,6 +1633,9 @@ public final class Launcher extends Activity
         Intent manageApps = new Intent(Settings.ACTION_MANAGE_ALL_APPLICATIONS_SETTINGS);
         manageApps.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+        Intent preferences = new Intent().setClass(this, Preferences.class);
+        preferences.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
         Intent settings = new Intent(android.provider.Settings.ACTION_SETTINGS);
         settings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
@@ -1644,6 +1651,12 @@ public final class Launcher extends Activity
             .setIcon(android.R.drawable.ic_menu_manage)
             .setIntent(manageApps)
             .setAlphabeticShortcut('M');
+        if (!getResources().getBoolean(R.bool.config_matricom)) {
+            menu.add(0, MENU_PREFERENCES, 0, R.string.menu_preferences)
+                .setIcon(android.R.drawable.ic_menu_preferences)
+                .setIntent(preferences)
+                .setAlphabeticShortcut('O');
+        }
         menu.add(0, MENU_SYSTEM_SETTINGS, 0, R.string.menu_settings)
             .setIcon(android.R.drawable.ic_menu_preferences)
             .setIntent(settings)
@@ -2037,6 +2050,14 @@ public final class Launcher extends Activity
         } else {
             Log.e(TAG, "Invalid app market intent.");
         }
+    }
+
+    public void onClickOverflowMenuButton(View v) {
+        final PopupMenu popupMenu = new PopupMenu(this, v);
+        final Menu menu = popupMenu.getMenu();
+        onCreateOptionsMenu(menu);
+        onPrepareOptionsMenu(menu);
+        popupMenu.show();
     }
 
     void startApplicationDetailsActivity(ComponentName componentName) {
@@ -3194,7 +3215,8 @@ public final class Launcher extends Activity
         // Find the app market activity by resolving an intent.
         // (If multiple app markets are installed, it will return the ResolverActivity.)
         ComponentName activityName = intent.resolveActivity(getPackageManager());
-        if (activityName != null) {
+        if (activityName != null && (ViewConfiguration.get(this).hasPermanentMenuKey() ||
+                getResources().getBoolean(R.bool.config_matricom))) {
             int coi = getCurrentOrientationIndexForGlobalIcons();
             mAppMarketIntent = intent;
             sAppMarketIcon[coi] = updateTextButtonWithIconFromExternalActivity(
@@ -3232,6 +3254,17 @@ public final class Launcher extends Activity
             text.add(getString(R.string.all_apps_home_button_label));
         }
         return result;
+    }
+
+    private void updateOverflowMenuButton() {
+        View overflowMenuButton = findViewById(R.id.overflow_menu_button);
+        if (ViewConfiguration.get(this).hasPermanentMenuKey() ||
+                getResources().getBoolean(R.bool.config_matricom)) {
+            overflowMenuButton.setVisibility(View.GONE);
+            overflowMenuButton.setEnabled(false);
+        } else {
+            overflowMenuButton.setVisibility(View.VISIBLE);
+        }
     }
 
     /**
@@ -3551,6 +3584,9 @@ public final class Launcher extends Activity
                             .commit();
             }
         }.start();
+
+        // Hide overflow menu on devices with a hardkey
+        updateOverflowMenuButton();
     }
 
     @Override
