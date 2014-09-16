@@ -34,6 +34,7 @@ import android.widget.TabWidget;
 import android.widget.TextView;
 
 import com.android.launcher.R;
+import com.android.launcher2.preference.PreferencesProvider;
 
 import java.util.ArrayList;
 
@@ -56,6 +57,8 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
     private boolean mResetAfterTransition;
     private Runnable mRelayoutAndMakeVisible;
 
+    private boolean mJoinWidgetsApps;
+
     public AppsCustomizeTabHost(Context context, AttributeSet attrs) {
         super(context, attrs);
         mLayoutInflater = LayoutInflater.from(context);
@@ -65,6 +68,7 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
                     mTabsContainer.setAlpha(1f);
                 }
             };
+        mJoinWidgetsApps = PreferencesProvider.Interface.Drawer.getJoinWidgetsApps(context);
     }
 
     /**
@@ -85,6 +89,7 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
     }
     void selectWidgetsTab() {
         setContentTypeImmediate(AppsCustomizePagedView.ContentType.Widgets);
+        mAppsCustomizePane.setCurrentPageToWidgets();
     }
 
     /**
@@ -206,27 +211,28 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
     public void onTabChanged(String tabId) {
         final AppsCustomizePagedView.ContentType type = getContentTypeForTabTag(tabId);
 
-        // Animate the changing of the tab content by fading pages in and out
-        final Resources res = getResources();
-        final int duration = res.getInteger(R.integer.config_tabTransitionDuration);
+        if (!mAppsCustomizePane.isContentType(type) || mJoinWidgetsApps) {
 
-        // We post a runnable here because there is a delay while the first page is loading and
-        // the feedback from having changed the tab almost feels better than having it stick
-        post(new Runnable() {
-            @Override
-            public void run() {
+            // Animate the changing of the tab content by fading pages in and out
+            final Resources res = getResources();
+            final int duration = res.getInteger(R.integer.config_tabTransitionDuration);
+
+            // We post a runnable here because there is a delay while the first page is loading and
+            // the feedback from having changed the tab almost feels better than having it stick
+            post(new Runnable() {
+                @Override
+                public void run() {
                 if (mAppsCustomizePane.getMeasuredWidth() <= 0 ||
-                        mAppsCustomizePane.getMeasuredHeight() <= 0) {
+                    mAppsCustomizePane.getMeasuredHeight() <= 0) {
                     reloadCurrentPage();
                     return;
                 }
-
                 // Take the visible pages and re-parent them temporarily to mAnimatorBuffer
                 // and then cross fade to the new pages
                 int[] visiblePageRange = new int[2];
                 mAppsCustomizePane.getVisiblePages(visiblePageRange);
                 if (visiblePageRange[0] == -1 && visiblePageRange[1] == -1) {
-                    // If we can't get the visible page ranges, then just skip the animation
+                // If we can't get the visible page ranges, then just skip the animation
                     reloadCurrentPage();
                     return;
                 }
@@ -259,7 +265,6 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
                             child.getMeasuredHeight());
                     p.setMargins((int) child.getLeft(), (int) child.getTop(), 0, 0);
                     mAnimationBuffer.addView(child, p);
-                }
 
                 // Toggle the new content
                 onTabChangedStart();
@@ -286,17 +291,13 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
                         reloadCurrentPage();
                     }
                 });
-
-                final AnimatorSet animSet = LauncherAnimUtils.createAnimatorSet();
+                AnimatorSet animSet = LauncherAnimUtils.createAnimatorSet();
                 animSet.playTogether(outAnim, inAnim);
                 animSet.setDuration(duration);
-                post(new Runnable() {
-                    public void run() {
-                        animSet.start();
-                    }
-                });
-            }
+                animSet.start();
+            }}
         });
+	}
     }
 
     public void setCurrentTabFromContent(AppsCustomizePagedView.ContentType type) {
@@ -422,9 +423,11 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
         }
 
         if (!toWorkspace) {
-            // Dismiss the workspace cling
+            // Going from Workspace -> All Apps
+            setVisibilityOfSiblingsWithLowerZOrder(INVISIBLE);
+
+            // Dismiss the workspace cling and show the all apps cling (if not already shown)
             l.dismissWorkspaceCling(null);
-            // Show the all apps cling (if not already shown)
             mAppsCustomizePane.showAllAppsCling();
             // Make sure adjacent pages are loaded (we wait until after the transition to
             // prevent slowing down the animation)
@@ -433,11 +436,6 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
             if (!LauncherApplication.isScreenLarge()) {
                 mAppsCustomizePane.hideScrollingIndicator(false);
             }
-
-            // Going from Workspace -> All Apps
-            // NOTE: We should do this at the end since we check visibility state in some of the
-            // cling initialization/dismiss code above.
-            setVisibilityOfSiblingsWithLowerZOrder(INVISIBLE);
         }
     }
 
