@@ -266,6 +266,7 @@ public class Workspace extends SmoothPagedView
     private int mDefaultHomescreen;
     private boolean mShowSearchBar;
     private boolean mResizeAnyWidget;
+    private boolean mScrollWallpaper;
     private boolean mShowScrollingIndicator;
     private boolean mShowDockDivider;
 
@@ -344,6 +345,7 @@ public class Workspace extends SmoothPagedView
         }
         mShowSearchBar = PreferencesProvider.Interface.Homescreen.getShowSearchBar(context);
         mResizeAnyWidget = PreferencesProvider.Interface.Homescreen.getResizeAnyWidget(context);
+        mScrollWallpaper = PreferencesProvider.Interface.Homescreen.Scrolling.getScrollWallpaper(context);
         mShowScrollingIndicator = PreferencesProvider.Interface.Homescreen.Indicator.getShowScrollingIndicator(context);
         mShowDockDivider = PreferencesProvider.Interface.Homescreen.Indicator.getShowDockDivider(context);
 
@@ -476,8 +478,10 @@ public class Workspace extends SmoothPagedView
         mWallpaperOffset = new WallpaperOffsetInterpolator();
         Display display = mLauncher.getWindowManager().getDefaultDisplay();
         display.getSize(mDisplaySize);
-        mWallpaperTravelWidth = (int) (mDisplaySize.x *
-                wallpaperTravelToScreenWidthRatio(mDisplaySize.x, mDisplaySize.y));
+        if (mScrollWallpaper) {
+            mWallpaperTravelWidth = (int) (mDisplaySize.x *
+                    wallpaperTravelToScreenWidthRatio(mDisplaySize.x, mDisplaySize.y));
+        }
 
         mMaxDistanceForFolderCreation = (0.55f * res.getDimensionPixelSize(R.dimen.app_icon_size));
         mFlingThresholdVelocity = (int) (FLING_THRESHOLD_VELOCITY * mDensity);
@@ -955,6 +959,13 @@ public class Workspace extends SmoothPagedView
         }
     }
 
+    private void centerWallpaperOffset() {
+        if (mWindowToken != null) {
+            mWallpaperManager.setWallpaperOffsetSteps(0.5f, 0);
+            mWallpaperManager.setWallpaperOffsets(mWindowToken, 0.5f, 0);
+        }
+    }
+
     public void updateWallpaperOffsetImmediately() {
         mUpdateWallpaperOffsetImmediately = true;
     }
@@ -984,13 +995,17 @@ public class Workspace extends SmoothPagedView
     @Override
     protected void updateCurrentPageScroll() {
         super.updateCurrentPageScroll();
-        computeWallpaperScrollRatio(mCurrentPage);
+        if (mScrollWallpaper) {
+            computeWallpaperScrollRatio(mCurrentPage);
+        }
     }
 
     @Override
     protected void snapToPage(int whichPage) {
         super.snapToPage(whichPage);
-        computeWallpaperScrollRatio(whichPage);
+        if (mScrollWallpaper) {
+            computeWallpaperScrollRatio(mCurrentPage);
+        }
     }
 
     @Override
@@ -1137,7 +1152,9 @@ public class Workspace extends SmoothPagedView
     @Override
     public void computeScroll() {
         super.computeScroll();
-        syncWallpaperOffsetWithScroll();
+        if (mScrollWallpaper) {
+            syncWallpaperOffsetWithScroll();
+        }
     }
 
     void showOutlines() {
@@ -1341,7 +1358,9 @@ public class Workspace extends SmoothPagedView
 
     @Override
     protected void onDraw(Canvas canvas) {
-        updateWallpaperOffsets();
+        if (mScrollWallpaper) {
+            updateWallpaperOffsets();
+        }
 
         // Draw the background gradient if necessary
         if (mBackground != null && mBackgroundAlpha > 0.0f && mDrawBackground) {
@@ -3410,6 +3429,9 @@ public class Workspace extends SmoothPagedView
         // needed
         updateChildrenLayersEnabled(false);
         setWallpaperDimension();
+        if (!mScrollWallpaper) {
+            centerWallpaperOffset();
+        }
     }
 
     /**
