@@ -278,27 +278,4 @@ s -->
     <!-- Dummy string [CHAR_LIMIT=60] -->
     <string name="custom_workspace_cling_description_2"></string>
 
-    <skip />
-    <!--             -->
-    <!-- Preferences -->
-    <!--             -->
-    <string name="preferences_title">Preferences</string>
-    <!-- UI -->
-    <string name="preferences_interface_title">Interface</string>
-    <!-- General -->
-    <string name="preferences_general_title">General</string>
-
-    <!-- UI -->
-    <!-- Homescreen -->
-    <string name="preferences_interface_homescreen_title">Homescreen</string>
-
-    <!-- Drawer -->
-    <string name="preferences_interface_drawer_title">Drawer</string>
-
-    <!-- Dock -->
-    <string name="preferences_interface_dock_title">Dock</string>
-
-    <!-- Icons -->
-    <string name="preferences_interface_icons_title">Icons</string>
-
 </resources>

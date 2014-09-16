@@ -100,7 +100,7 @@ import android.widget.Toast;
 import com.android.common.Search;
 import com.android.launcher.R;
 import com.android.launcher2.DropTarget.DragObject;
-import com.android.launcher2.preference.Preferences;
+import com.android.launcher2.preference.*;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -313,6 +313,9 @@ public final class Launcher extends Activity
 
     private HideFromAccessibilityHelper mHideFromAccessibilityHelper
         = new HideFromAccessibilityHelper();
+    // Preferences
+    private boolean mShowSearchBar;
+    private boolean mShowDockDivider;
 
     private Runnable mBuildLayersRunnable = new Runnable() {
         public void run() {
@@ -374,6 +377,9 @@ public final class Launcher extends Activity
         // this also ensures that any synchronous binding below doesn't re-trigger another
         // LauncherModel load.
         mPaused = false;
+        // Preferences
+        mShowSearchBar = PreferencesProvider.Interface.Homescreen.getShowSearchBar(this);
+        mShowDockDivider = PreferencesProvider.Interface.Homescreen.Indicator.getShowDockDivider(this);
 
         if (PROFILE_STARTUP) {
             android.os.Debug.startMethodTracing(
@@ -739,6 +745,10 @@ public final class Launcher extends Activity
 
         mPaused = false;
         sPausedFromUserAction = false;
+        // Restart launcher when preferences are changed
+        if (preferencesChanged()) {
+            android.os.Process.killProcess(android.os.Process.myPid());
+        }
         if (mRestoring || mOnResumeNeedsLoad) {
             mWorkspaceLoading = true;
             mModel.startLoader(true, -1);
@@ -969,6 +979,15 @@ public final class Launcher extends Activity
 
         // Get the search/delete bar
         mSearchDropTargetBar = (SearchDropTargetBar) mDragLayer.findViewById(R.id.qsb_bar);
+
+        // Hide the search divider if we are hiding search bar
+        if (!mShowSearchBar && mQsbDivider != null && getCurrentOrientation() == Configuration.ORIENTATION_LANDSCAPE) {
+            mQsbDivider.setVisibility(View.GONE);
+        }
+
+        if (!mShowDockDivider) {
+            ((View) findViewById(R.id.dock_divider)).setVisibility(View.GONE);
+        }
 
         // Setup AppsCustomize
         mAppsCustomizeTabHost = (AppsCustomizeTabHost) findViewById(R.id.apps_customize_pane);
@@ -2018,7 +2037,7 @@ public final class Launcher extends Activity
             ComponentName activityName = searchManager.getGlobalSearchActivity();
             Intent intent = new Intent(RecognizerIntent.ACTION_WEB_SEARCH);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            if (activityName != null) {
+        if (activityName != null && mShowSearchBar) {
                 intent.setPackage(activityName.getPackageName());
             }
             startActivity(null, intent, "onClickVoiceButton");
@@ -2914,15 +2933,23 @@ public final class Launcher extends Activity
 
     void hideDockDivider() {
         if (mQsbDivider != null && mDockDivider != null) {
-            mQsbDivider.setVisibility(View.INVISIBLE);
-            mDockDivider.setVisibility(View.INVISIBLE);
+            if (mShowSearchBar) {
+                mQsbDivider.setVisibility(View.INVISIBLE);
+            }
+            if (mShowDockDivider) {
+                mDockDivider.setVisibility(View.INVISIBLE);
+            }
         }
     }
 
     void showDockDivider(boolean animated) {
         if (mQsbDivider != null && mDockDivider != null) {
-            mQsbDivider.setVisibility(View.VISIBLE);
-            mDockDivider.setVisibility(View.VISIBLE);
+            if (mShowSearchBar) {
+                mQsbDivider.setVisibility(View.VISIBLE);
+            }
+            if (mShowDockDivider) {
+                mDockDivider.setVisibility(View.VISIBLE);
+            }
             if (mDividerAnimator != null) {
                 mDividerAnimator.cancel();
                 mQsbDivider.setAlpha(1f);
@@ -2931,8 +2958,10 @@ public final class Launcher extends Activity
             }
             if (animated) {
                 mDividerAnimator = LauncherAnimUtils.createAnimatorSet();
-                mDividerAnimator.playTogether(LauncherAnimUtils.ofFloat(mQsbDivider, "alpha", 1f),
-                        LauncherAnimUtils.ofFloat(mDockDivider, "alpha", 1f));
+                if (mShowSearchBar && mShowDockDivider) {
+                    mDividerAnimator.playTogether(LauncherAnimUtils.ofFloat(mQsbDivider, "alpha", 1f),
+                            LauncherAnimUtils.ofFloat(mDockDivider, "alpha", 1f));
+                }
                 int duration = 0;
                 if (mSearchDropTargetBar != null) {
                     duration = mSearchDropTargetBar.getTransitionInDuration();
@@ -2999,10 +3028,14 @@ public final class Launcher extends Activity
         }
     }
 
+    public int getCurrentOrientation() {
+        return getResources().getConfiguration().orientation;
+    }
+
     /** Maps the current orientation to an index for referencing orientation correct global icons */
     private int getCurrentOrientationIndexForGlobalIcons() {
         // default - 0, landscape - 1
-        switch (getResources().getConfiguration().orientation) {
+        switch (getCurrentOrientation()) {
         case Configuration.ORIENTATION_LANDSCAPE:
             return 1;
         default:
@@ -3910,6 +3943,18 @@ public final class Launcher extends Activity
     public void dismissFolderCling(View v) {
         Cling cling = (Cling) findViewById(R.id.folder_cling);
         dismissCling(cling, Cling.FOLDER_CLING_DISMISSED_KEY, DISMISS_CLING_DURATION);
+    }
+
+    public boolean preferencesChanged() {
+        SharedPreferences prefs =
+            getSharedPreferences(PreferencesProvider.PREFERENCES_KEY, Context.MODE_PRIVATE);
+        boolean preferencesChanged = prefs.getBoolean(PreferencesProvider.PREFERENCES_CHANGED, false);
+        if (preferencesChanged) {
+            SharedPreferences.Editor editor = prefs.edit();
+                    editor.putBoolean(PreferencesProvider.PREFERENCES_CHANGED, false);
+                    editor.commit();
+        }
+        return preferencesChanged;
     }
 
     /**

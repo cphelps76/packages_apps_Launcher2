@@ -29,6 +29,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
@@ -42,6 +43,7 @@ import android.graphics.drawable.Drawable;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
@@ -55,6 +57,7 @@ import android.widget.TextView;
 import com.android.launcher.R;
 import com.android.launcher2.FolderIcon.FolderRingAnimator;
 import com.android.launcher2.LauncherSettings.Favorites;
+import com.android.launcher2.preference.PreferencesProvider;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -259,6 +262,11 @@ public class Workspace extends SmoothPagedView
             mLauncher.getModel().bindRemainingSynchronousPages();
         }
     };
+    // Preferences
+    private boolean mShowSearchBar;
+    private boolean mResizeAnyWidget;
+    private boolean mShowScrollingIndicator;
+    private boolean mShowDockDivider;
 
     /**
      * Used to inflate the Workspace from XML.
@@ -299,28 +307,9 @@ public class Workspace extends SmoothPagedView
                 R.styleable.Workspace, defStyle, 0);
 
         if (LauncherApplication.isScreenLarge()) {
-            // Determine number of rows/columns dynamically
-            // TODO: This code currently fails on tablets with an aspect ratio < 1.3.
-            // Around that ratio we should make cells the same size in portrait and
-            // landscape
-            TypedArray actionBarSizeTypedArray =
-                context.obtainStyledAttributes(new int[] { android.R.attr.actionBarSize });
-            final float actionBarHeight = actionBarSizeTypedArray.getDimension(0, 0f);
-
-            Point minDims = new Point();
-            Point maxDims = new Point();
-            mLauncher.getWindowManager().getDefaultDisplay().getCurrentSizeRange(minDims, maxDims);
-
-            cellCountX = 1;
-            while (CellLayout.widthInPortrait(res, cellCountX + 1) <= minDims.x) {
-                cellCountX++;
-            }
-
-            cellCountY = 1;
-            while (actionBarHeight + CellLayout.heightInLandscape(res, cellCountY + 1)
-                <= minDims.y) {
-                cellCountY++;
-            }
+            int[] cellCount = getCellCountsForLarge(context);
+            cellCountX = cellCount[0];
+            cellCountY = cellCount[1];
         }
 
         mSpringLoadedShrinkFactor =
@@ -337,8 +326,20 @@ public class Workspace extends SmoothPagedView
 
         setOnHierarchyChangeListener(this);
 
+        // if there is a value set it the preferences, use that instead
+        if (!LauncherApplication.isScreenLarge()) {
+            cellCountX = PreferencesProvider.Interface.Homescreen.getCellCountX(context, cellCountX);
+            cellCountY = PreferencesProvider.Interface.Homescreen.getCellCountY(context, cellCountY);
+        }
+
         LauncherModel.updateWorkspaceLayoutCells(cellCountX, cellCountY);
         setHapticFeedbackEnabled(false);
+
+        // Preferences
+        mShowSearchBar = PreferencesProvider.Interface.Homescreen.getShowSearchBar(context);
+        mResizeAnyWidget = PreferencesProvider.Interface.Homescreen.getResizeAnyWidget(context);
+        mShowScrollingIndicator = PreferencesProvider.Interface.Homescreen.Indicator.getShowScrollingIndicator(context);
+        mShowDockDivider = PreferencesProvider.Interface.Homescreen.Indicator.getShowDockDivider(context);
 
         initWorkspace();
 
@@ -349,6 +350,35 @@ public class Workspace extends SmoothPagedView
         if (getImportantForAccessibility() == View.IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
             setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         }
+    }
+
+    public static int[] getCellCountsForLarge(Context context) {
+        int[] cellCount = new int[2];
+
+        final Resources res = context.getResources();
+        // Determine number of rows/columns dynamically
+        // TODO: This code currently fails on tablets with an aspect ratio < 1.3.
+        // Around that ratio we should make cells the same size in portrait and
+        // landscape
+        TypedArray actionBarSizeTypedArray =
+            context.obtainStyledAttributes(new int[] { android.R.attr.actionBarSize });
+        DisplayMetrics displayMetrics = res.getDisplayMetrics();
+        final float actionBarHeight = actionBarSizeTypedArray.getDimension(0, 0f);
+        final float systemBarHeight = res.getDimension(R.dimen.status_bar_height);
+        final float smallestScreenDim = res.getConfiguration().smallestScreenWidthDp *
+            displayMetrics.density;
+
+        cellCount[0] = 1;
+        while (CellLayout.widthInPortrait(res, cellCount[0] + 1) <= smallestScreenDim) {
+            cellCount[0]++;
+        }
+
+        cellCount[1] = 1;
+        while (actionBarHeight + CellLayout.heightInLandscape(res, cellCount[1] + 1)
+                <= smallestScreenDim - systemBarHeight) {
+            cellCount[1]++;
+        }
+        return cellCount;
     }
 
     // estimate the size of a widget with spans hSpan, vSpan. return MAX_VALUE for each
@@ -416,6 +446,18 @@ public class Workspace extends SmoothPagedView
             mBackground = res.getDrawable(R.drawable.apps_customize_bg);
         } catch (Resources.NotFoundException e) {
             // In this case, we will skip drawing background protection
+        }
+
+        if (!mShowSearchBar) {
+            int paddingTop = 0;
+            if (mLauncher.getCurrentOrientation() == Configuration.ORIENTATION_PORTRAIT) {
+                paddingTop = (int)res.getDimension(R.dimen.qsb_bar_hidden_inset);
+            }
+            setPadding(0, paddingTop, getPaddingRight(), getPaddingBottom());
+        }
+
+        if (!mShowScrollingIndicator) {
+            disableScrollingIndicator();
         }
 
         mWallpaperOffset = new WallpaperOffsetInterpolator();
@@ -2277,7 +2319,7 @@ public class Workspace extends SmoothPagedView
                         final LauncherAppWidgetHostView hostView = (LauncherAppWidgetHostView) cell;
                         AppWidgetProviderInfo pinfo = hostView.getAppWidgetInfo();
                         if (pinfo != null &&
-                                pinfo.resizeMode != AppWidgetProviderInfo.RESIZE_NONE) {
+                                pinfo.resizeMode != AppWidgetProviderInfo.RESIZE_NONE || mResizeAnyWidget) {
                             final Runnable addResizeFrame = new Runnable() {
                                 public void run() {
                                     DragLayer dragLayer = mLauncher.getDragLayer();
@@ -3827,8 +3869,8 @@ public class Workspace extends SmoothPagedView
         final View scrollIndicator = getScrollingIndicator();
 
         cancelScrollingIndicatorAnimations();
-        if (qsbDivider != null) qsbDivider.setAlpha(reducedFade);
-        if (dockDivider != null) dockDivider.setAlpha(reducedFade);
-        scrollIndicator.setAlpha(1 - fade);
+        if (qsbDivider != null && mShowSearchBar) qsbDivider.setAlpha(reducedFade);
+        if (dockDivider != null && mShowDockDivider) dockDivider.setAlpha(reducedFade);
+        if (scrollIndicator != null && mShowScrollingIndicator) scrollIndicator.setAlpha(1 - fade);
     }
 }
