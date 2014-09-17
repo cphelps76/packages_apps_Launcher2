@@ -174,7 +174,7 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
         mFolderName.setInputType(mFolderName.getInputType() |
                 InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
 
-        if (PreferencesProvider.Interface.Icons.getHideIconLabels(mLauncher)){
+        if (PreferencesProvider.Interface.Icons.getHideIconLabels()){
             mFolderName.setVisibility(View.GONE);
             mFolderNameHeight = getPaddingBottom();
         }
@@ -261,7 +261,7 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
         // Convert to a string here to ensure that no other state associated with the text field
         // gets saved.
         String newTitle = mFolderName.getText().toString();
-        if (!PreferencesProvider.Interface.Icons.getHideIconLabels(mLauncher)) {
+        if (!PreferencesProvider.Interface.Icons.getHideIconLabels()) {
             mInfo.setTitle(newTitle);
         }
         LauncherModel.updateItemInDatabase(mLauncher, mInfo);

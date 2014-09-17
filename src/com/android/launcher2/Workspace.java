@@ -330,26 +330,25 @@ public class Workspace extends SmoothPagedView
 
         // if there is a value set it the preferences, use that instead
         if (!LauncherApplication.isScreenLarge()) {
-            cellCountX = PreferencesProvider.Interface.Homescreen.getCellCountX(context, cellCountX);
-            cellCountY = PreferencesProvider.Interface.Homescreen.getCellCountY(context, cellCountY);
+            cellCountX = PreferencesProvider.Interface.Homescreen.getCellCountX(cellCountX);
+            cellCountY = PreferencesProvider.Interface.Homescreen.getCellCountY(cellCountY);
         }
 
         LauncherModel.updateWorkspaceLayoutCells(cellCountX, cellCountY);
         setHapticFeedbackEnabled(false);
 
         // Preferences
-        mNumberHomescreens = PreferencesProvider.Interface.Homescreen.getNumberHomescreens(context);
-        mDefaultHomescreen = PreferencesProvider.Interface.Homescreen.getDefaultHomescreen(context,
-                mNumberHomescreens / 2);
+        mNumberHomescreens = PreferencesProvider.Interface.Homescreen.getNumberHomescreens();
+        mDefaultHomescreen = PreferencesProvider.Interface.Homescreen.getDefaultHomescreen(mNumberHomescreens / 2);
         if (mDefaultHomescreen >= mNumberHomescreens) {
             mDefaultHomescreen = mNumberHomescreens / 2;
         }
-        mShowSearchBar = PreferencesProvider.Interface.Homescreen.getShowSearchBar(context);
-        mResizeAnyWidget = PreferencesProvider.Interface.Homescreen.getResizeAnyWidget(context);
-        mHideIconLabels = PreferencesProvider.Interface.Icons.getHideIconLabels(context);
-        mScrollWallpaper = PreferencesProvider.Interface.Homescreen.Scrolling.getScrollWallpaper(context);
-        mShowScrollingIndicator = PreferencesProvider.Interface.Homescreen.Indicator.getShowScrollingIndicator(context);
-        mShowDockDivider = PreferencesProvider.Interface.Homescreen.Indicator.getShowDockDivider(context);
+        mShowSearchBar = PreferencesProvider.Interface.Homescreen.getShowSearchBar();
+        mResizeAnyWidget = PreferencesProvider.Interface.Homescreen.getResizeAnyWidget();
+        mHideIconLabels = PreferencesProvider.Interface.Icons.getHideIconLabels();
+        mScrollWallpaper = PreferencesProvider.Interface.Homescreen.Scrolling.getScrollWallpaper();
+        mShowScrollingIndicator = PreferencesProvider.Interface.Homescreen.Indicator.getShowScrollingIndicator();
+        mShowDockDivider = PreferencesProvider.Interface.Dock.getShowDivider();
 
         initWorkspace();
 
