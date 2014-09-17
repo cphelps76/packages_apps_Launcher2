@@ -70,6 +70,8 @@
 
     <!-- Icons -->
     <string name="preferences_interface_icons_title">Icons</string>
+    <string name="preferences_interface_homescreen_general_hide_icon_labels_title">Hide icon labels</string>
+    <string name="preferences_interface_homescreen_general_hide_icon_labels_summary">Hide homescreen icon labels</string>
 
     <!-- Google folder title -->
     <string name="google_title">Google</string>

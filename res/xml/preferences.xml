@@ -103,6 +103,9 @@
         <!-- Icons -->
         <PreferenceScreen android:key="ui_icons"
             android:title="@string/preferences_interface_icons_title">
+                <CheckBoxPreference android:key="ui_homescreen_general_hide_icon_labels"
+                    android:title="@string/preferences_interface_homescreen_general_hide_icon_labels_title"
+                    android:summary="@string/preferences_interface_homescreen_general_hide_icon_labels_summary" />
         </PreferenceScreen>
 
         <!-- General -->

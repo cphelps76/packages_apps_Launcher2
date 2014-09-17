@@ -97,7 +97,10 @@ public final class PreferencesProvider {
         }
 
         public static class Icons {
-
+            public static boolean getHideIconLabels(Context context) {
+                final SharedPreferences preferences = context.getSharedPreferences(PREFERENCES_KEY, 0);
+                return preferences.getBoolean("ui_homescreen_general_hide_icon_labels", false);
+            }
         }
 
         public static class General {

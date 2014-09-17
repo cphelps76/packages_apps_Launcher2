@@ -42,6 +42,7 @@ import android.widget.TextView;
 import com.android.launcher.R;
 import com.android.launcher2.DropTarget.DragObject;
 import com.android.launcher2.FolderInfo.FolderListener;
+import com.android.launcher2.preference.*;
 
 import java.util.ArrayList;
 
@@ -133,7 +134,9 @@ public class FolderIcon extends LinearLayout implements FolderListener {
         FolderIcon icon = (FolderIcon) LayoutInflater.from(launcher).inflate(resId, group, false);
 
         icon.mFolderName = (BubbleTextView) icon.findViewById(R.id.folder_icon_name);
-        icon.mFolderName.setText(folderInfo.title);
+        if (!PreferencesProvider.Interface.Icons.getHideIconLabels(launcher)) {
+            icon.mFolderName.setText(folderInfo.title);
+        }
         icon.mPreviewBackground = (ImageView) icon.findViewById(R.id.preview_background);
 
         icon.setTag(folderInfo);
