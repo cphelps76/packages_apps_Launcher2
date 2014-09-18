@@ -18,6 +18,9 @@
     xmlns:launcher="http://schemas.android.com/apk/res/com.android.launcher"
     android:key="ui_general"
     android:title="@string/preferences_interface_icons_title">
+        <Preference android:key="ui_icons_iconpack"
+            android:title="@string/preferences_interface_icons_iconpack_title"
+            android:summary="@string/preferences_interface_icons_iconpack_summary" />
         <CheckBoxPreference android:key="ui_icons_hide_icon_labels"
             android:title="@string/preferences_interface_icons_hide_icon_labels_title"
             android:summary="@string/preferences_interface_icons_hide_icon_labels_summary" />

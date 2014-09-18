@@ -18,6 +18,7 @@ package com.android.launcher2.preference;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 
 import com.android.launcher2.LauncherApplication;
 import com.android.launcher2.Workspace;
@@ -30,11 +31,11 @@ public final class PreferencesProvider {
 
     public static final String PREFERENCES_CHANGED = "preferences_changed";
 
-    private static Map<String, ?> sKeyValues;
+    private static Map<String, Object> sKeyValues;
 
     public static void load(Context context) {
         SharedPreferences preferences = context.getSharedPreferences(PREFERENCES_KEY, 0);
-        sKeyValues = preferences.getAll();
+        sKeyValues = (Map<String, Object>)preferences.getAll();
     }
 
     private static int getInt(String key, int def) {
@@ -47,9 +48,25 @@ public final class PreferencesProvider {
                 (Boolean) sKeyValues.get(key) : def;
     }
 
+    private static void setBoolean(Context ctx, String key, boolean value) {
+        SharedPreferences preferences = ctx.getSharedPreferences(PREFERENCES_KEY, 0);
+        Editor editor = preferences.edit();
+        editor.putBoolean(key, value);
+        editor.apply(); // For better performance
+        sKeyValues.put(key, Boolean.valueOf(value));
+    }
+
     private static String getString(String key, String def) {
         return sKeyValues.containsKey(key) && sKeyValues.get(key) instanceof String ?
                 (String) sKeyValues.get(key) : def;
+    }
+
+    private static void setString(Context ctx, String key, String value) {
+        SharedPreferences preferences = ctx.getSharedPreferences(PREFERENCES_KEY, 0);
+        Editor editor = preferences.edit();
+        editor.putString(key, value);
+        editor.apply(); // For better performance
+        sKeyValues.put(key, value);
     }
 
     public static class Interface {
@@ -69,7 +86,7 @@ public final class PreferencesProvider {
                 }
             }
             public static int getCellCountY(int def) {
-                String[] values = getString("ui_homescreen_grid", def + "|0").split("\\|");;
+                String[] values = getString("ui_homescreen_grid", def + "|0").split("\\|");
                 try {
                     return Integer.parseInt(values[0]);
                 } catch (NumberFormatException e) {
@@ -117,6 +134,12 @@ public final class PreferencesProvider {
         }
 
         public static class Icons {
+            public static String getIconPack() {
+                return getString("ui_icons_iconpack", "");
+            }
+            public static void setIconPack(Context ctx, String packageName) {
+                setString(ctx, "ui_icons_iconpack", packageName);
+            }
             public static boolean getHideIconLabels() {
                 return getBoolean("ui_icons_hide_icon_labels", false);
             }

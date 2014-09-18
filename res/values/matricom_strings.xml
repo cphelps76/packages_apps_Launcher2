@@ -70,6 +70,11 @@
 
     <!-- Icons -->
     <string name="preferences_interface_icons_title">Icons</string>
+    <string name="preferences_interface_icons_iconpack_title">Icon pack</string>
+    <string name="preferences_interface_icons_iconpack_summary">Icon packs replace the default application icon</string>
+    <string name="dialog_pick_iconpack_title">Pick icon pack</string>
+    <string name="default_iconpack_title">Default icons</string>
+    <string name="no_iconpacks_summary">No icon packs installed</string>
     <string name="preferences_interface_icons_hide_icon_labels_title">Hide icon labels</string>
     <string name="preferences_interface_icons_hide_icon_labels_summary">Hide homescreen icon labels</string>
 

@@ -22,6 +22,7 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceScreen;
 import android.preference.PreferenceFragment;
 import android.text.TextUtils;
 import android.util.Log;
@@ -33,6 +34,7 @@ import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
+import com.android.launcher2.IconPackHelper;
 import com.android.launcher2.LauncherApplication;
 import com.android.launcher.R;
 
@@ -131,11 +133,39 @@ public class Preferences extends PreferenceActivity
     }
 
     public static class IconFragment extends PreferenceFragment {
+        private static final String ICON_PACK_KEY = "ui_icons_iconpack";
+        private Preference mIconPackPreference;
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
 
             addPreferencesFromResource(R.xml.preferences_icons);
+            mIconPackPreference = findPreference(ICON_PACK_KEY);
+        }
+
+        @Override
+        public void onResume() {
+            int numIconPacks = IconPackHelper.getSupportedPackages(
+                    getActivity()).size();
+            if (numIconPacks > 0) {
+                mIconPackPreference.setSummary(
+                        R.string.preferences_interface_icons_iconpack_summary);
+                mIconPackPreference.setEnabled(true);
+            } else {
+                mIconPackPreference.setSummary(R.string.no_iconpacks_summary);
+                mIconPackPreference.setEnabled(false);
+            }
+            super.onResume();
+        }
+
+
+        @Override
+        public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
+                Preference preference) {
+            if (preference.getKey().equals("ui_icons_iconpack")) {
+                IconPackHelper.pickIconPack(getActivity());
+            }
+            return super.onPreferenceTreeClick(preferenceScreen, preference);
         }
     }
 

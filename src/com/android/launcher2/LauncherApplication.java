@@ -27,6 +27,7 @@ import android.database.ContentObserver;
 import android.os.Handler;
 
 import com.android.launcher.R;
+import com.android.launcher2.preference.PreferencesProvider;
 
 import java.lang.ref.WeakReference;
 
@@ -46,6 +47,9 @@ public class LauncherApplication extends Application {
         // set sIsScreenXLarge and sScreenDensity *before* creating icon cache
         sIsScreenLarge = getResources().getBoolean(R.bool.is_large_screen);
         sScreenDensity = getResources().getDisplayMetrics().density;
+
+        // Load all preferences
+        PreferencesProvider.load(this);
 
         mIconCache = new IconCache(this);
         mModel = new LauncherModel(this, mIconCache);
@@ -106,7 +110,7 @@ public class LauncherApplication extends Application {
         return mModel;
     }
 
-    IconCache getIconCache() {
+    public IconCache getIconCache() {
         return mIconCache;
     }
 
